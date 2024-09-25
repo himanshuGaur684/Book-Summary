@@ -1,12 +1,6 @@
 package gaur.himanshu.booksummary
 
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,22 +42,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.flowWithLifecycle
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalPermissionsApi::class
 )
 @Composable
-fun MainScreen(fileManager: ScopeStorageManager) {
+fun MainScreen() {
     var uiState by remember { mutableStateOf(emptyList<Summary>()) }
 
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -71,54 +58,12 @@ fun MainScreen(fileManager: ScopeStorageManager) {
     val isEdit = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val lifecycle = LocalLifecycleOwner.current
-
-    val uri = remember { mutableStateOf<Uri?>(null) }
-
-    LaunchedEffect(key1 = uri.value) {
-        fileManager.readSummaries(uri.value)
-            .flowWithLifecycle(lifecycle.lifecycle)
-            .collectLatest {
-                uiState = it
-            }
-    }
-
-    val permission = rememberMultiplePermissionsState(
-        listOf(
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        )
-    )
-
     var type by remember { mutableStateOf(Type.INTERNAL) }
 
     LaunchedEffect(key1 = sheetState) {
         if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
             summaryEdit.value = Summary("", "", Type.INTERNAL)
         }
-    }
-    val context = LocalContext.current
-
-    val activityResult =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) {
-            it.data?.data?.let {folderUri->
-                context.contentResolver.takePersistableUriPermission(
-                    folderUri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-                uri.value = folderUri
-                fileManager.setUri(folderUri)
-            }
-        }
-    LaunchedEffect(key1 = Unit) {
-        context.takePermission(version10 = {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            }
-            activityResult.launch(intent)
-        }, versionBelow10 = {
-            permission.launchMultiplePermissionRequest()
-        })
     }
 
     ModalBottomSheetLayout(
@@ -129,16 +74,9 @@ fun MainScreen(fileManager: ScopeStorageManager) {
                 type = type,
                 onTypeChanged = { type = it }) { title, desc ->
                 if (isEdit.value) {
-                    val summary = Summary(title, desc)
-                    val updatedList = fileManager.update(type, summary)
-                    uiState = updatedList
-
-                    summaryEdit.value = Summary("", "")
-                    isEdit.value = false
+                    // TODO: Update
                 } else {
-                    val summary = Summary(title, desc)
-                    val list = fileManager.save(type, summary)
-                    uiState = list
+                    // TODO: Insert
                 }
                 scope.launch { sheetState.hide() }
             }
@@ -205,8 +143,7 @@ fun MainScreen(fileManager: ScopeStorageManager) {
                                     )
                                 }
                                 IconButton(onClick = {
-                                    val list = fileManager.delete(it.type, it)
-                                    uiState = list
+                                    // TODO: Delete
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -293,19 +230,6 @@ fun Form(
             onClick = { onClick.invoke(title.value, desc.value) }) {
             Text(text = "Save")
         }
-    }
-
-}
-
-
-inline fun Context.takePermission(
-    version10: () -> Unit,
-    versionBelow10: () -> Unit
-) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        version10.invoke()
-    } else {
-        versionBelow10.invoke()
     }
 
 }
