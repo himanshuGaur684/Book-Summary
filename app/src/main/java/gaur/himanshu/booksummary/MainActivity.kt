@@ -15,6 +15,8 @@ import gaur.himanshu.booksummary.ui.theme.BookSummaryTheme
 
 class MainActivity : ComponentActivity() {
 
+    private val fileManager by lazy { FileManager(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -23,7 +25,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier
                     .safeContentPadding()
                     .fillMaxSize()) {
-                    MainScreen()
+                    MainScreen(fileManager)
                 }
             }
         }

@@ -42,15 +42,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.flowWithLifecycle
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
 )
 @Composable
-fun MainScreen() {
+fun MainScreen(fileManager: FileManager) {
     var uiState by remember { mutableStateOf(emptyList<Summary>()) }
 
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -66,6 +69,15 @@ fun MainScreen() {
         }
     }
 
+    val lifeCyclerOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(key1 = fileManager.getSummriesFlow()) {
+        fileManager.getSummriesFlow().flowWithLifecycle(lifeCyclerOwner.lifecycle)
+            .collectLatest {
+                uiState = it
+            }
+    }
+
     ModalBottomSheetLayout(
         modifier = Modifier.safeContentPadding(),
         sheetContent = {
@@ -74,9 +86,12 @@ fun MainScreen() {
                 type = type,
                 onTypeChanged = { type = it }) { title, desc ->
                 if (isEdit.value) {
-                    // TODO: Update
+                    val summary = Summary(title,desc,type)
+                    uiState =fileManager.update(summary)
+                    summaryEdit.value = Summary("", "", Type.INTERNAL)
                 } else {
-                    // TODO: Insert
+                    val summary = Summary(title, desc, type)
+                    uiState = fileManager.save(summary)
                 }
                 scope.launch { sheetState.hide() }
             }
@@ -143,7 +158,7 @@ fun MainScreen() {
                                     )
                                 }
                                 IconButton(onClick = {
-                                    // TODO: Delete
+                                    uiState =fileManager.delete(it)
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
