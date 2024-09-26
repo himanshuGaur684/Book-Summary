@@ -85,7 +85,7 @@ fun MainScreen() {
     ) {
 
         Scaffold(topBar = {
-            TopAppBar(title = { Text(text = "Notes App") }, actions = {
+            TopAppBar(title = { Text(text = "Book Summary App") }, actions = {
                 IconButton(onClick = {
                     scope.launch { sheetState.show() }
                 }) {
@@ -188,12 +188,12 @@ fun Form(
 
         OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = title.value, onValueChange = {
             title.value = it
-        }, singleLine = true, placeholder = { Text(text = "Title") })
+        }, singleLine = true, placeholder = { Text(text = "Book Name") })
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = desc.value, onValueChange = {
             desc.value = it
-        }, singleLine = true, placeholder = { Text(text = "Description") })
+        }, singleLine = true, placeholder = { Text(text = "Summary") })
         Spacer(modifier = Modifier.height(8.dp))
 
 
