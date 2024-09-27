@@ -46,11 +46,14 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.flowWithLifecycle
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalPermissionsApi::class,
 )
 @Composable
 fun MainScreen(fileManager: FileManager) {
@@ -62,6 +65,15 @@ fun MainScreen(fileManager: FileManager) {
     val scope = rememberCoroutineScope()
 
     var type by remember { mutableStateOf(Type.INTERNAL) }
+
+    val permission = rememberMultiplePermissionsState(permissions = listOf(
+        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    ))
+
+    LaunchedEffect(key1 = Unit) {
+        permission.launchMultiplePermissionRequest()
+    }
 
     LaunchedEffect(key1 = sheetState) {
         if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
