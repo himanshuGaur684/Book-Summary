@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -27,7 +26,7 @@ const val BOOK_SUMMARY = "BOOK_SUMMARY"
 class ScopeStorageManager(private val context: Context, private var uri: Uri? = null) {
 
 
-    fun setUri(uri: Uri?){
+    fun setUri(uri: Uri?) {
         this.uri = uri
     }
 
@@ -63,23 +62,23 @@ class ScopeStorageManager(private val context: Context, private var uri: Uri? = 
                         contentValues
                     )
                     uri?.let {
-                        val outputStream = context.contentResolver.openOutputStream(it)
-                        outputStream?.let {
-                            val writer = OutputStreamWriter(it)
-                            writer.write(summary.summary)
-                            writer.flush()
-                            writer.close()
-                        }
-                        outputStream?.close()
+                        context.contentResolver.openOutputStream(it)
+                            .use { stream ->
+                                OutputStreamWriter(stream).use { writer ->
+                                    writer.write(summary.summary)
+                                }
+                            }
                     }
-                }else{
+                } else {
                     val state = Environment.getExternalStorageState()
-                    if(Environment.MEDIA_MOUNTED == state){
-                        val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY"))
-                        if(directory.exists().not()) {
+                    if (Environment.MEDIA_MOUNTED == state) {
+                        val directory = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY")
+                        )
+                        if (directory.exists().not()) {
                             directory.mkdirs()
                         }
-                        val file = File(directory,fileName)
+                        val file = File(directory, fileName)
                         file.writeText(text = summary.summary)
                     }
 
@@ -119,7 +118,8 @@ class ScopeStorageManager(private val context: Context, private var uri: Uri? = 
                     val volume = MediaStore.VOLUME_EXTERNAL
                     val uri = MediaStore.Files.getContentUri(volume)
 
-                    val cursor = contentResolver.query(uri, projection, selection, selectionArgs, null)
+                    val cursor =
+                        contentResolver.query(uri, projection, selection, selectionArgs, null)
 
                     var updatedUri = Uri.parse("")
 
@@ -139,10 +139,12 @@ class ScopeStorageManager(private val context: Context, private var uri: Uri? = 
                         outputStream.flush()
                         outputStream.close()
                     }
-                }else{
-                    val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY"))
-                    val file = File(directory,summary.fileName)
-                    if(file.exists()){
+                } else {
+                    val directory = Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY")
+                    )
+                    val file = File(directory, summary.fileName)
+                    if (file.exists()) {
                         file.writeText(summary.summary)
                     }
                 }
@@ -194,11 +196,13 @@ class ScopeStorageManager(private val context: Context, private var uri: Uri? = 
                         it.close()
                     }
                     contentResolver.delete(deleteUri, null, null)
-                }else{
-                    val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY"))
-                    if(directory.exists().not()) directory.mkdirs()
-                    val file = File(directory,summary.fileName)
-                    if(file.exists()) file.delete()
+                } else {
+                    val directory = Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY")
+                    )
+                    if (directory.exists().not()) directory.mkdirs()
+                    val file = File(directory, summary.fileName)
+                    if (file.exists()) file.delete()
                 }
             }
         }
@@ -241,10 +245,11 @@ class ScopeStorageManager(private val context: Context, private var uri: Uri? = 
                 println("FileInfo" + "The URI does not represent a valid directory.")
             }
             list.addAll(tempList)
-        }else{
-            val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY"))
+        } else {
+            val directory =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS.plus("/$BOOK_SUMMARY"))
             directory.listFiles()?.map {
-                Summary(it.name,it.readText(),Type.SHARED)
+                Summary(it.name, it.readText(), Type.SHARED)
             }?.let { list.addAll(it) }
         }
         return list
