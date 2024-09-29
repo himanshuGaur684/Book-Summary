@@ -113,6 +113,7 @@ class FileManager(private val context: Context, private var uri: Uri? = null) {
                             val index = it.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
                             val fileId = it.getLong(index)
                             deleteUri = ContentUris.withAppendedId(pathUri, fileId)
+                            break
                         }
                         it.close()
                     }
@@ -163,6 +164,7 @@ class FileManager(private val context: Context, private var uri: Uri? = null) {
                             val index = it.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
                             val fileId = it.getLong(index)
                             updateUri = ContentUris.withAppendedId(pathUri, fileId)
+                            break
                         }
                         it.close()
                     }
